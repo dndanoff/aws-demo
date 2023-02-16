@@ -1,0 +1,8 @@
+node_modules
+dist
+.serverless
+.vscode
+.localstack
+
+# Do net check files that are ignored for git. Useful for small tests.
+*.no-git.*

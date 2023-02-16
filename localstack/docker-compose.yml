@@ -1,0 +1,27 @@
+version: '3.8'
+
+name: aws-localstack
+
+services:
+  localstack:
+    container_name: aws-demo-localstack_main
+    image: localstack/localstack
+    ports:
+      - '4566:4566' # LocalStack Gateway
+      - '4510-4559:4510-4559' # external services port range
+    environment:
+      - AWS_DEFAULT_REGION=us-east-1
+      - DEBUG=1
+      # Declare which aws services will be used in localstack
+      #- SERVICES=sqs,sns,iam,s3,lambda
+      - DATA_DIR=/tmp/localstack/data
+      - LOCALSTACK_HOSTNAME=localhost
+      - PERSIST_ALL=false
+      - DOCKER_HOST=unix:///var/run/docker.sock
+      # This fixes sls deploy error when using mountCode flag. Error: Please note that Lambda mounts cannot be used with LAMBDA_REMOTE_DOCKER=1
+      - LAMBDA_REMOTE_DOCKER=0
+      # This options is to enable debugging https://docs.localstack.cloud/user-guide/tools/lambda-tools/debugging/#debugging-nodejs-lambdas
+      #- LAMBDA_DOCKER_FLAGS=-e NODE_OPTIONS=--inspect-brk=0.0.0.0:9229 -p 9229:9229
+    volumes:
+      - '${LOCALSTACK_VOLUME_DIR:-./volume}:/var/lib/localstack'
+      - '/var/run/docker.sock:/var/run/docker.sock'

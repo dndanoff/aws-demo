@@ -1,0 +1,10 @@
+{
+    "version": "2.0.0",
+    "tasks": [
+        {
+            "label": "Wait Remote Localstack Debugger Server",
+            "type": "shell",
+            "command": "while (-not (docker ps | Select-String -Pattern ':9229')) { Start-Sleep -Seconds 1 }; Start-Sleep -Seconds 1"
+        }
+    ]
+}

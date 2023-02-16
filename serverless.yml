@@ -1,0 +1,125 @@
+service: learning-resources-aws-demo
+frameworkVersion: '3'
+
+plugins:
+  - serverless-localstack
+  - serverless-iam-roles-per-function
+
+custom:
+  currentStage: ${opt:stage, self:provider.stage}
+  localstack:
+    stages:
+      # list of stages for which the plugin should be enabled
+      - local
+    host: http://localhost # optional - LocalStack host to connect to
+    edgePort: 4566 # optional - LocalStack edge port to connect to
+    debug: true
+    autostart: true # optional - Start LocalStack in Docker on Serverless deploy
+    lambda:
+      # Enable this flag to improve performance
+      mountCode: True
+    docker:
+      # Enable this flag to run "docker ..." commands as sudo
+      sudo: False
+
+provider:
+  name: aws
+  stage: local
+  runtime: nodejs16.x
+  environment:
+    NODE_ENV: ${self:custom.currentStage}
+  iam:
+    role:
+      statements:
+        - Effect: Allow
+          Action:
+            - dynamodb:DescribeTable
+            - dynamodb:Query
+            - dynamodb:Scan
+            - dynamodb:GetItem
+            - dynamodb:PutItem
+            - dynamodb:UpdateItem
+            - dynamodb:DeleteItem
+          Resource:
+            - 'Fn::GetAtt': [LearningResources, Arn]
+
+functions:
+  getLearningResources:
+    handler: src/learning/lambdaHandlers.getLearningResources
+    name: ${self:custom.currentStage}-getLearningResources # optional, Deployed Lambda name
+    description: Retrieve all learning resources # optional, Description to publish to AWS
+    runtime: nodejs16.x # optional overwrite, default is provider runtime
+    memorySize: 512 # optional, in MB, default is 1024
+    timeout: 6 # optional, in seconds, default is 6
+    reservedConcurrency: 10 # optional, reserved concurrency limit for this function. By default, AWS uses account concurrency limit
+    events:
+      - http:
+          method: GET
+          path: /api/resources
+  createLearningResource:
+    handler: src/learning/lambdaHandlers.createLearningResource
+    name: ${self:custom.currentStage}-createLearningResource # optional, Deployed Lambda name
+    description: Create a learning resource # optional, Description to publish to AWS
+    runtime: nodejs16.x # optional overwrite, default is provider runtime
+    memorySize: 512 # optional, in MB, default is 1024
+    timeout: 6 # optional, in seconds, default is 6
+    reservedConcurrency: 2 # optional, reserved concurrency limit for this function. By default, AWS uses account concurrency limit
+    events:
+      - http:
+          method: POST
+          path: /api/resources
+resources:
+  Resources:
+    LearningResources:
+      Type: AWS::DynamoDB::Table
+      Properties:
+        TableName: LEARNING_RESOURCES
+        AttributeDefinitions:
+          - AttributeName: id
+            AttributeType: S
+          - AttributeName: platform
+            AttributeType: S
+          - AttributeName: seniorityLevel
+            AttributeType: S
+          - AttributeName: expertise
+            AttributeType: S
+        KeySchema:
+          - AttributeName: id
+            KeyType: HASH
+        ProvisionedThroughput:
+          ReadCapacityUnits: 5
+          WriteCapacityUnits: 5
+        GlobalSecondaryIndexes:
+          - IndexName: SeniorityLevelIndex
+            KeySchema:
+              - AttributeName: seniorityLevel
+                KeyType: HASH
+              - AttributeName: expertise
+                KeyType: RANGE
+            Projection:
+              ProjectionType: 'ALL'
+            ProvisionedThroughput:
+              ReadCapacityUnits: 5
+              WriteCapacityUnits: 5
+          - IndexName: ExpertiseIndex
+            KeySchema:
+              - AttributeName: expertise
+                KeyType: HASH
+              - AttributeName: seniorityLevel
+                KeyType: RANGE
+            Projection:
+              ProjectionType: 'ALL'
+            ProvisionedThroughput:
+              ReadCapacityUnits: 5
+              WriteCapacityUnits: 5
+          - IndexName: PlatformIndex
+            KeySchema:
+              - AttributeName: platform
+                KeyType: HASH
+              - AttributeName: expertise
+                KeyType: RANGE
+            Projection:
+              ProjectionType: 'ALL'
+            ProvisionedThroughput:
+              ReadCapacityUnits: 5
+              WriteCapacityUnits: 5
