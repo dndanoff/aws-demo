@@ -2,34 +2,25 @@ import { v4 as uuid } from 'uuid';
 
 import { LearningResourceRepo } from './application/repository/aws/learningResourceRepo.js';
 import { logger } from './logger.js';
-import { ApiError } from './domain/service/error.js';
+import { errorHandler, formatResponse } from './lambdaUtils.js';
 import { GetLearningResources } from './domain/service/query/getLearningResources.js';
 import { CreateLearningResource } from './domain/service/command/createLearningResource.js';
 
-const formatResponse = ({ body, status = 200 }) => ({
-    statusCode: status,
-    body,
-});
-
-const errorHandler = async (lambdaHandler) => {
-    try {
-        const response = await lambdaHandler();
-        return response;
-    } catch (err) {
-        if (!(err instanceof ApiError)) {
-            return new ApiError(err.message);
-        }
-        return err;
+let learningResourceRepo;
+// Lazy load to speed up initialization phaze. This is just an example of a good practice https://aws.amazon.com/blogs/compute/operating-lambda-performance-optimization-part-2/
+const initRepo = () => {
+    if (!learningResourceRepo) {
+        learningResourceRepo = new LearningResourceRepo();
     }
-};
 
-const learningResourceRepo = new LearningResourceRepo();
+    return learningResourceRepo;
+};
 
 export const getLearningResources = async (_event, _context, _callback) =>
     errorHandler(async () => {
         const log = logger.child({ request_uuid: uuid() });
         const getLearningResourcesService = new GetLearningResources({
-            learningResourceRepo,
+            learningResourceRepo: initRepo(),
         });
         const resources = await getLearningResourcesService.execute();
         log.info({
@@ -46,7 +37,7 @@ export const createLearningResource = async (event, _context, _callback) =>
     errorHandler(async () => {
         const log = logger.child({ request_uuid: uuid() });
         const createLearningResourceService = new CreateLearningResource({
-            learningResourceRepo,
+            learningResourceRepo: initRepo(),
         });
         const params = JSON.parse(event.body);
         const resource = await createLearningResourceService.execute(params);
