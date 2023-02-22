@@ -5,5 +5,5 @@
 - Automaticcally populate updateAt attribute
 - Optimistic locking with DynamoDB and updatedAt attribute
 - Pagination with DynamoDB
-- Test Serverless framework offline
+- Test Serverless framework offline - done -> use aws-offline to start the app
 - Host React app to call the backend services

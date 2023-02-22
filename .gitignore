@@ -2,7 +2,8 @@
 node_modules
 jspm_packages
 coverage
-localstack/volume
+local-setup/localstack/volume
+logs
 
 # Serverless directories
 .serverless

@@ -17,10 +17,14 @@
         "lint:format": "prettier --write \"**/*.js\"",
         "lint:dep-versions": "ensure-wildcard-free-dependencies",
         "lint:eslint": "eslint \"./src/\" --max-warnings=0",
-        "awslocal:start": "docker compose -f localstack/docker-compose.yml up -d",
-        "awslocal:stop": "docker compose -f localstack/docker-compose.yml stop && shx rm -rf localstack/volume",
-        "awslocal:deploy": "serverless deploy --stage local",
-        "awslocal": "aws --endpoint-url http://localhost:4566"
+        "aws-local:start": "docker compose -f local-setup/localstack/docker-compose.yml up -d",
+        "aws-local:stop": "docker compose -f local-setup/localstack/docker-compose.yml stop && shx rm -rf local-setup/localstack/volume",
+        "aws-local:deploy": "serverless deploy --stage local",
+        "aws-local": "aws --endpoint-url http://localhost:4566",
+        "aws-offline:start": "docker compose -f local-setup/offline/docker-compose.yml up -d",
+        "aws-offline:deploy": "serverless dynamodb start --migrate && cross-env SLS_DEBUG=* serverless offline",
+        "aws-offline:deploy:watch": "nodemon --watch src/ --exec npm run aws-offline:deploy",
+        "aws-offline:stop": "docker compose -f local-setup/offline/docker-compose.yml stop"
     },
     "dependencies": {
         "@aws-sdk/client-dynamodb": "3.267.0",
@@ -43,9 +47,12 @@
         "jest-environment-node": "29.2.2",
         "jest-fail-on-console": "3.0.2",
         "jest-watch-typeahead": "2.2.0",
+        "nodemon": "2.0.20",
         "npm-run-all": "4.1.5",
+        "serverless-dynamodb-local": "0.2.40",
         "serverless-iam-roles-per-function": "^3.2.0",
         "serverless-localstack": "^1.0.2",
+        "serverless-offline": "12.0.4",
         "shx": "0.3.4"
     }
 }

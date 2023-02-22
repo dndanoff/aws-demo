@@ -1,10 +1,15 @@
 import { cleanEnv, str } from 'envalid';
 
-const nodeEnvs = { local: 'local', dev: 'dev', qa: 'qa', prod: 'prod' };
+const offlineDefaults = {
+    NODE_ENV: 'offline',
+    AWS_REGION: 'offline',
+    AWS_ENDPOINT: 'http://localhost:8000',
+};
 
 const localDefaults = {
     NODE_ENV: 'local',
     AWS_REGION: 'us-east-1',
+    AWS_ENDPOINT: 'http://aws-demo-localstack_main:4566',
 };
 
 const devDefaults = {
@@ -17,7 +22,12 @@ const qaDefaults = {
     AWS_REGION: 'us-east-1',
 };
 
-const defaults = { local: localDefaults, dev: devDefaults, qa: qaDefaults };
+const defaults = {
+    offline: offlineDefaults,
+    local: localDefaults,
+    dev: devDefaults,
+    qa: qaDefaults,
+};
 
 const { NODE_ENV } = process.env;
 
@@ -34,19 +44,26 @@ const env = cleanEnv(
         AWS_REGION: str({
             desc: 'AWS Region',
         }),
+        AWS_ENDPOINT: str({
+            desc: 'Specifies different endpoint used for local development',
+            default: undefined,
+        }),
     }
 );
 
-const config = {
+export const config = {
     nodeEnv: env.NODE_ENV,
     loggerLevel: env.LOG_LEVEL,
     aws: {
         region: env.AWS_REGION,
-        endpoint:
-            env.NODE_ENV === nodeEnvs.local
-                ? 'http://aws-demo-localstack_main:4566'
-                : undefined,
+        endpoint: env.AWS_ENDPOINT,
     },
 };
 
-export { config, nodeEnvs };
+export const nodeEnvs = {
+    offline: 'offline',
+    local: 'local',
+    dev: 'dev',
+    qa: 'qa',
+    prod: 'prod',
+};

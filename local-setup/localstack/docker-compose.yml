@@ -1,7 +1,5 @@
 version: '3.8'
-
 name: aws-localstack
-
 services:
   localstack:
     container_name: aws-demo-localstack_main

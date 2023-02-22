@@ -16,9 +16,10 @@ const initRepo = () => {
     return learningResourceRepo;
 };
 
-export const getLearningResources = async (_event, _context, _callback) =>
-    errorHandler(async () => {
-        const log = logger.child({ request_uuid: uuid() });
+export const getLearningResources = async (_event, _context, _callback) => {
+    const logInstance = logger.child({ request_uuid: uuid() });
+    return errorHandler(logInstance, async (log = logInstance) => {
+        log.info({ msg: 'Calling GetLearningResources' });
         const getLearningResourcesService = new GetLearningResources({
             learningResourceRepo: initRepo(),
         });
@@ -32,14 +33,17 @@ export const getLearningResources = async (_event, _context, _callback) =>
             body: { resources },
         });
     });
+};
 
-export const createLearningResource = async (event, _context, _callback) =>
-    errorHandler(async () => {
-        const log = logger.child({ request_uuid: uuid() });
+export const createLearningResource = async (event, _context, _callback) => {
+    const logInstance = logger.child({ request_uuid: uuid() });
+    return errorHandler(logInstance, async (log = logInstance) => {
+        const params = JSON.parse(event.body);
+        log.info({ msg: 'Calling CreateLearningResource' }, params);
         const createLearningResourceService = new CreateLearningResource({
             learningResourceRepo: initRepo(),
         });
-        const params = JSON.parse(event.body);
+
         const resource = await createLearningResourceService.execute(params);
         log.info({
             msg: 'Successfully called createLearningResource',
@@ -50,3 +54,4 @@ export const createLearningResource = async (event, _context, _callback) =>
             status: 201,
         });
     });
+};

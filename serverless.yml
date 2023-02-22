@@ -2,14 +2,24 @@ service: learning-resources-aws-demo
 frameworkVersion: '3'
 
 plugins:
+  - serverless-dynamodb-local # Must be before offline plugin so that offline plugin starts the offline DB
+  - serverless-offline
   - serverless-localstack
   - serverless-iam-roles-per-function
 
 custom:
-  currentStage: ${opt:stage, self:provider.stage}
+  currentStage: ${opt:stage, 'offline'}
+  serverless-offline:
+    httpPort: 8080
+  dynamodb:
+    stages:
+      - offline
+    start:
+      image: dynamodb-offline
+      port: 8000
+      noStart: true
   localstack:
     stages:
-      # list of stages for which the plugin should be enabled
       - local
     host: http://localhost # optional - LocalStack host to connect to
     edgePort: 4566 # optional - LocalStack edge port to connect to
@@ -24,8 +34,8 @@ custom:
 
 provider:
   name: aws
-  stage: local
   runtime: nodejs16.x
+  stage: ${self:custom.currentStage}
   environment:
     NODE_ENV: ${self:custom.currentStage}
   iam:
